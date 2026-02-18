@@ -19,10 +19,19 @@
 
 import {Config} from '~/Config';
 import {ATTACHMENT_MAX_SIZE_NON_PREMIUM, ATTACHMENT_MAX_SIZE_PREMIUM} from '~/Constants';
+import type {AVATAR_EXTENSIONS, EMOJI_EXTENSIONS, STICKER_EXTENSIONS} from '~/Constants';
 
 export function getAttachmentMaxSize(isPremium: boolean): number {
 	if (Config.instance.selfHosted) {
 		return ATTACHMENT_MAX_SIZE_PREMIUM;
 	}
 	return isPremium ? ATTACHMENT_MAX_SIZE_PREMIUM : ATTACHMENT_MAX_SIZE_NON_PREMIUM;
+}
+
+export function isAnimatedImage(
+	extensions: typeof AVATAR_EXTENSIONS | typeof EMOJI_EXTENSIONS | typeof STICKER_EXTENSIONS,
+	format: string,
+	animated: boolean = false,
+): boolean {
+	return extensions.has(format) && animated;
 }

@@ -27,6 +27,7 @@ import {
 	STICKER_MAX_SIZE,
 	StickerFormatTypes,
 } from '~/Constants';
+import {isAnimatedImage} from '~/utils/AttachmentUtils';
 import {InputValidationError} from '~/Errors';
 import type {IMediaService} from './IMediaService';
 import type {IStorageService} from './IStorageService';
@@ -93,7 +94,7 @@ export class AvatarService {
 			await this.storageService.deleteAvatar({prefix, key: `${fullKeyPath}/${stripAnimationPrefix(previousKey)}`});
 		}
 
-		return metadata.format === 'gif' ? `a_${imageHashShort}` : imageHashShort;
+		return isAnimatedImage(AVATAR_EXTENSIONS, metadata.format, metadata.animated) ? `a_${imageHashShort}` : imageHashShort;
 	}
 
 	async uploadAvatarToPath(params: {
@@ -153,7 +154,7 @@ export class AvatarService {
 			await this.storageService.deleteObject(bucket, `${keyPath}/${stripAnimationPrefix(previousKey)}`);
 		}
 
-		return metadata.format === 'gif' ? `a_${imageHashShort}` : imageHashShort;
+		return isAnimatedImage(AVATAR_EXTENSIONS, metadata.format, metadata.animated) ? `a_${imageHashShort}` : imageHashShort;
 	}
 
 	async processEmoji(params: {errorPath: string; base64Image: string}): Promise<{
@@ -188,7 +189,7 @@ export class AvatarService {
 			);
 		}
 
-		return {imageBuffer, animated: metadata.format === 'gif'};
+		return {imageBuffer, animated: isAnimatedImage(EMOJI_EXTENSIONS, metadata.format, metadata.animated)};
 	}
 
 	async uploadEmoji(params: {prefix: 'emojis'; emojiId: bigint; imageBuffer: Uint8Array}): Promise<void> {
@@ -221,7 +222,7 @@ export class AvatarService {
 			isNSFWAllowed: false,
 		});
 
-		if (metadata == null || !EMOJI_EXTENSIONS.has(metadata.format)) {
+		if (metadata == null || !STICKER_EXTENSIONS.has(metadata.format)) {
 			throw InputValidationError.create(
 				errorPath,
 				`Invalid image format. Supported extensions: ${[...STICKER_EXTENSIONS].join(', ')}`,
@@ -232,7 +233,7 @@ export class AvatarService {
 
 		switch (metadata.format) {
 			case 'png': {
-				computedFormat = StickerFormatTypes.PNG;
+				computedFormat = metadata.animated ? StickerFormatTypes.APNG : StickerFormatTypes.PNG;
 				break;
 			}
 			case 'gif': {
